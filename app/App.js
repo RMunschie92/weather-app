@@ -1,5 +1,8 @@
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import Logo from './components/Logo';
+import Current from './components/Current';
+import Forecast from './components/Forecast';
 
 export default class App extends React.Component {
   
@@ -8,39 +11,43 @@ export default class App extends React.Component {
     this.state = { 
       isLoading: true,
       key: '7a4b8df164a345058e3212057191802',
-      data: ''
+      current: '',
+      forecast: ''
     }
   }
 
-  componentDidMount() {
-    return fetch(`https://api.apixu.com/v1/current.json?key=7a4b8df164a345058e3212057191802&q=Boston`)
-      .then((response) => response.json())
-      .then((responseJson) => {
+  async componentDidMount() {
+    try {
+      const dataUrl = await fetch('https://api.apixu.com/v1/forecast.json?key=7a4b8df164a345058e3212057191802&q=Boston');
+      const dataJson = await dataUrl.json();
 
-        this.setState({
-          isLoading: false,
-          data: responseJson.location
-        })
-      })
-      .catch((error) => {
-        console.error(error);
-      })
+      this.setState({ 
+        isLoading: false,
+        current: dataJson.current,
+        location: dataJson.location,
+        forecast: dataJson.forecast
+      });
+    }
+    catch(err) {
+      console.log(err);
+    }
   }
 
   render() {
 
     if (this.state.isLoading) {
       return (
-        <View style={{flex: 1, padding: 20}}>
+        <View style={styles.wrapper}>
           <ActivityIndicator size="large" color="#0000ff" />
         </View>
       )
     }
     return (
-      <View style={styles.container}>
-        <View>
-          <Text>Munsch Weather Studio</Text>
-          <Text>{this.state.data.name}</Text>
+      <View style={styles.wrapper}>
+        <View style={styles.container}>
+          <Logo />
+          <Current data={this.state.current} location={this.state.location}/>
+          <Forecast data={this.state.forecast}/>
         </View>
       </View>
     );
@@ -48,10 +55,14 @@ export default class App extends React.Component {
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    backgroundColor: '#ff8',
+  },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     alignItems: 'center',
-    justifyContent: 'center',
-  },
+    marginTop: 75,
+    marginBottom: 25
+  }
 });
